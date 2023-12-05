@@ -1,13 +1,11 @@
-#!/bin/sh -x
-#Install donkeycar
-
-printf "Install donkeycar automatically by shell-script\n"
-printf "About manual installation  Please see https://docs.donkeycar.com/guide/robot_sbc/setup_raspberry_pi/\n"
-
 #Raspi-config
 sudo raspi-config nonint do_vnc 0
 sudo raspi-config nonint do_onewire 0
 sudo raspi-config nonint do_camera 0
+
+#Update and Upgrade
+yes | sudo apt-get update
+yes | sudo apt-get upgrade
 
 #Install Dependencies
 yes | sudo apt-get install build-essential python3 python3-dev python3-pip python3-virtualenv python3-numpy python3-picamera python3-pandas python3-rpi.gpio i2c-tools avahi-utils joystick libopenjp2-7-dev libtiff5-dev gfortran libatlas-base-dev libopenblas-dev libhdf5-serial-dev git ntp
@@ -26,7 +24,7 @@ cd ~/
 sudo rm -rf projects
 mkdir ~/projects
 cd ~/projects
-git clone https://github.com/robocarstore/donkeycar.git 
+git clone https://github.com/robocarstore/donkeycar
 cd donkeycar
 git checkout robocarstore_v43
 pip install -e .[pi]
