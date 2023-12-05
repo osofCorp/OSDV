@@ -8,10 +8,14 @@ yes | sudo apt-get update
 yes | sudo apt-get upgrade
 
 #Install Dependencies
-yes | sudo apt-get install build-essential python3 python3-dev python3-pip python3-virtualenv python3-numpy python3-picamera python3-pandas python3-rpi.gpio i2c-tools avahi-utils joystick libopenjp2-7-dev libtiff5-dev gfortran libatlas-base-dev libopenblas-dev libhdf5-serial-dev git ntp
+yes | sudo apt-get install build-essential python3 python3-dev python3-pip python3-virtualenv python3-numpy python3-picamera python3-pandas python3-rpi.gpio i2c-tools avahi-utils joystick libopenjp2-7-dev libtiff5-dev gfortran libatlas-base-dev libopenblas-dev libhdf5-dev libhdf5-serial-dev libhdf5-103 git ntp
 
 #Optional - Install OpenCV Dependencies
-yes | sudo apt-get install libilmbase-dev libopenexr-dev libgstreamer1.0-dev libjasper-dev libwebp-dev libatlas-base-dev libavcodec-dev libavformat-dev libswscale-dev libqtgui4 libqt4-test
+yes | sudo apt-get install libilmbase-dev libopenexr-dev libgstreamer1.0-dev libjasper-dev libwebp-dev libatlas-base-dev libavcodec-dev libavformat-dev libswscale-dev libqtgui4 libqtwebkit4 libqt4-test
+
+
+wget  https://bootstrap.pypa.io/get-pip.py
+sudo python3 get-pip.py
 
 #Setup Virtual Env
 python3 -m virtualenv -p python3 env --system-site-packages
