@@ -16,6 +16,10 @@ Options:
 """
 from docopt import docopt
 
+import numpy as np
+import pigpio
+import time
+
 #
 # import cv2 early to avoid issue with importing after tensorflow
 # see https://github.com/opencv/opencv/issues/14884#issuecomment-599852128
