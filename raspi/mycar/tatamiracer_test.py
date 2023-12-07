@@ -9,6 +9,58 @@ import re
 import time
 import threading
 
+
+class PWMSteering_TATAMI:
+    def __init__(self,cfg):
+
+        self.gpio_pin = 14 #Servo PWM pin
+        self.pi = pigpio.pi()
+        self.pigpio = pigpio
+        
+        #tatamiRacer Steering Control Tunable Parameter
+        self.left_pulse = cfg.TATAMI_STEERING_LEFT_PWM #LEFT PWM
+        self.right_pulse = cfg.TATAMI_STEERING_RIGHT_PWM #RIGHT PWM
+        self.steering_feel = cfg.TATAMI_STEERING_FEEL #Steering Feeling Adjustment (Angle Level at Steering 50%)  
+        self.steering_balance = cfg.TATAMI_STEERING_BALANCE #Steering L/R Balance -1.0(L)..+1.0(R)
+
+        self.half_range = abs(self.right_pulse - self.left_pulse)/2
+        self.center = min(self.left_pulse,self.right_pulse) + self.half_range
+
+        self.servo_idle_time0 = time.time()
+        self.servo_p0 = 0
+
+        print('PWM Steering for TatamiRacer Created.')
+
+    def update(self):
+        pass
+
+class PWMThrottle_TATAMI:
+    def __init__(self,cfg):
+        self.gpio_pin0 = 13 #Motor PWM1 pin
+        self.gpio_pin1 = 19 #Motor PWM2 pin
+        self.pigpio = pigpio
+        self.pi = pigpio.pi()
+
+        #TatamiRacer Throttle Control Tunable Parameter
+        self.throttle_start_boost_time = cfg.TATAMI_THROTTLE_START_BOOST_TIME
+        self.throttle_start_boost = cfg.TATAMI_THROTTLE_START_BOOST
+        self.throttle_upper_limit = cfg.TATAMI_THROTTLE_UPPER_LIMIT
+        self.throttle_lower_limit = cfg.TATAMI_THROTTLE_LOWER_LIMIT
+        self.throttle_steering_boost = cfg.TATAMI_THROTTLE_STEERING_BOOST
+        
+        self.throttle_deadzone = 0.01 #Throttle deadzone for detect zero (0..1)
+        self.pwm_max = 100 #PWM Max
+        self.pi.set_PWM_range(self.gpio_pin0,100)  # Set PWM range
+        self.pi.set_PWM_frequency(self.gpio_pin0,490)
+        self.pi.set_PWM_range(self.gpio_pin1,100)  # Set PWM range
+        self.pi.set_PWM_frequency(self.gpio_pin1,490)
+        
+        self.throttle_start_boost_time0 = time.time()
+        print('PWM Throttle for TatamiRacer created.')
+
+    def update(self):
+        pass
+
 pi = pigpio.pi()
 gpio_pin0 = 13 #Motor1
 gpio_pin1 = 19 #Motor2
