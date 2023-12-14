@@ -980,6 +980,9 @@ def add_drivetrain(V, cfg):
             V.add(steering, inputs=['angle'], threaded=True)
             V.add(motor, inputs=["throttle"])
 
+            drive_train = dict()
+            drive_train['steering'] = steering
+
         elif cfg.DRIVE_TRAIN_TYPE == "MM1":
             from donkeycar.parts.robohat import RoboHATDriver
             V.add(RoboHATDriver(cfg), inputs=['angle', 'throttle'])
@@ -1006,7 +1009,7 @@ def add_drivetrain(V, cfg):
             V.add(steering, inputs=['angle'], threaded=True)
             V.add(motor, inputs=["throttle"])
 
-            
+
         elif cfg.DRIVE_TRAIN_TYPE == "VESC":
             from donkeycar.parts.actuator import VESC
             logger.info("Creating VESC at port {}".format(cfg.VESC_SERIAL_PORT))
