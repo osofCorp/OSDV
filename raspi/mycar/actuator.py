@@ -4,12 +4,83 @@ Classes to control the motors and servos. These classes
 are wrapped in a mixer class before being used in the drive loop.
 """
 
+from abc import ABC, abstractmethod
+import time
+import logging
+from typing import Tuple
+
+import donkeycar as dk
+from donkeycar import utils
+from donkeycar.utils import clamp
+
+logger = logging.getLogger(__name__)
+
+try:
+    import RPi.GPIO as GPIO
+except ImportError as e:
+    logger.warn(f"RPi.GPIO was not imported. {e}")
+    globals()["GPIO"] = None
+
 from donkeycar.parts.pins import OutputPin, PwmPin, PinState
 from donkeycar.utilities.deprecated import deprecated
 
-import time
+logger = logging.getLogger(__name__)
 
-import donkeycar as dk
+
+#
+# pwm/duty-cycle/pulse
+# - Standard RC servo pulses range from 1 millisecond (full reverse)
+#   to 2 milliseconds (full forward) with 1.5 milliseconds being neutral (stopped).
+# - These pulses are typically send at 50 hertz (every 20 milliseconds).
+# - This means that, using the standard 50hz frequency, a 1 ms pulse
+#   represents a 5% duty cycle and a 2 ms pulse represents a 10% duty cycle.
+# - The important part is the length of the pulse;
+#   it must be in the range of 1 ms to 2ms.
+# - So this means that if a different frequency is used, then the duty cycle
+#   must be adjusted in order to get the 1ms to 2ms pulse.
+# - For instance, if a 60hz frequency is used, then a 1 ms pulse requires
+#   a duty cycle of 0.05 * 60 / 50 = 0.06 (6%) duty cycle
+# - We default the frequency of our PCA9685 to 60 hz, so pulses in
+#   config are generally based on 60hz frequency and 12 bit values.
+#   We use 12 bit values because the PCA9685 has 12 bit resolution.
+#   So a 1 ms pulse is 0.06 * 4096 ~= 246, a neutral pulse of 0.09 duty cycle
+#   is 0.09 * 4096 ~= 367 and full forward pulse of 0.12 duty cycles
+#   is 0.12 * 4096 ~= 492
+# - These are generalizations that are useful for understanding the underlying
+#   api call arguments.  The final choice of duty-cycle/pulse length depends
+#   on your hardware and perhaps your strategy (you may not want to go too fast,
+#   and so you may choose is low max throttle pwm)
+#
+
+def duty_cycle(pulse_ms:float, frequency_hz:float) -> float:
+    """
+    Calculate the duty cycle, 0 to 1, of a pulse given
+    the frequency and the pulse length
+
+    :param pulse_ms:float the desired pulse length in milliseconds
+    :param frequency_hz:float the pwm frequency in hertz
+    :return:float duty cycle in range 0 to 1
+    """
+    ms_per_cycle = 1000 / frequency_hz
+    duty = pulse_ms / ms_per_cycle
+    return duty
+
+
+def pulse_ms(pulse_bits:int) -> float:
+    """
+    Calculate pulse width in milliseconds given a
+    12bit pulse (as a PCA9685 would use).
+    Donkeycar throttle and steering PWM values are
+    based on PCA9685 12bit pulse values, where
+    0 is zero duty cycle and 4095 is 100% duty cycle.
+
+    :param pulse_bits:int 12bit integer in range 0 to 4095
+    :return:float pulse length in milliseconds
+    """
+    if pulse_bits < 0 or pulse_bits > 4095:
+        raise ValueError("pulse_bits must be in range 0 to 4095 (12bit integer)")
+    return pulse_bits / 4095
+
 
 class PulseController:
     """
@@ -536,7 +607,7 @@ class MockController(object):
         pass
 
 
-class L298N_HBridge_DC_Motor(object):
+class L298N_HBridge_2pin(object):
     '''
     Motor controlled with an L298N hbridge from the gpio pins on Rpi
     '''
