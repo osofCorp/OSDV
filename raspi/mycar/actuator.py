@@ -615,14 +615,12 @@ class L298N_HBridge_2pin(object):
         import RPi.GPIO as GPIO
         self.pin_forward = pin_forward
         self.pin_backward = pin_backward
-        self.pwm_pin = pwm_pin
 
         GPIO.setmode(GPIO.BOARD)
         GPIO.setup(self.pin_forward, GPIO.OUT)
         GPIO.setup(self.pin_backward, GPIO.OUT)
-        GPIO.setup(self.pwm_pin, GPIO.OUT)
         
-        self.pwm = GPIO.PWM(self.pwm_pin, freq)
+        self.pwm = GPIO.PWM(freq)
         self.pwm.start(0)
 
     def run(self, speed):
