@@ -990,7 +990,7 @@ def add_drivetrain(V, cfg):
             #
             from donkeycar.parts.actuator import PWMSteering, PWMThrottle, PulseController
 
-            dt = cfg.SERVO_HBRIDGE_2PIN
+            dt = cfg.PIGPIO_PWM
             steering_controller = PulseController(
                 pwm_pin=pins.pwm_pin_by_id(dt['PWM_STEERING_PIN']),
                 pwm_scale=dt['PWM_STEERING_SCALE'],
