@@ -997,8 +997,8 @@ def add_drivetrain(V, cfg):
                 pwm_scale=dt['PWM_STEERING_SCALE'],
                 pwm_inverted=dt['PWM_STEERING_INVERTED'])
             steering = PWMSteering(controller=steering_controller,
-                                            left_pulse=dt['STEERING_LEFT_PWM'],
-                                            right_pulse=dt['STEERING_RIGHT_PWM'])
+                                            left_pulse=dt[cfg.STEERING_LEFT_PWM],
+                                            right_pulse=dt[cfg.STEERING_RIGHT_PWM])
 
             motor = actuator.L298N_HBridge_2pin(
                 pins.pwm_pin_by_id(dt['FWD_DUTY_PIN']),

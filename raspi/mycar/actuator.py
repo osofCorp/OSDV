@@ -608,52 +608,78 @@ class MockController(object):
 
 
 class L298N_HBridge_2pin(object):
-    '''
-    Motor controlled with an L298N hbridge from the gpio pins on Rpi
-    '''
-    def __init__(self, pin_forward, pin_backward, freq = 50):
-        import RPi.GPIO as GPIO
+    """
+    Motor controlled with an 'mini' L298N hbridge using 2 PwmPins,
+    one for forward pwm and for reverse pwm.
+    Chosen with configuration DRIVETRAIN_TYPE=DC_TWO_WHEEL
+    See pins.py for pin provider implementations.
+
+    See https://www.instructables.com/Tutorial-for-Dual-Channel-DC-Motor-Driver-Board-PW/
+    for how an L298N mini-hbridge modules is wired.
+    This driver can also be used for an L9110S/HG7881 motor driver.  See
+    https://electropeak.com/learn/interfacing-l9110s-dual-channel-h-bridge-motor-driver-module-with-arduino/
+    for how an L9110S motor driver module is wired.
+    """
+
+    def __init__(self, pin_forward:PwmPin, pin_backward:PwmPin, zero_throttle:float=0, max_duty = 0.9):
+        """
+        pin_forward:PwmPin Takes a duty cycle in the range of 0 to 1,
+                        where 0 is fully off and 1 is fully on.
+                        When the duty_cycle > 0 the motor will turn clockwise
+                        proportial to the duty_cycle
+        pin_backward:PwmPin Takes a duty cycle in the range of 0 to 1,
+                            where 0 is fully off and 1 is fully on.
+                            When the duty_cycle > 0 the motor will turn counter-clockwise
+                            proportial to the duty_cycle
+        zero_throttle: values at or below zero_throttle are treated as zero.
+        max_duty: the maximum duty cycle that will be send to the motors
+
+        NOTE: if pin_forward and pin_backward are both at duty_cycle == 0,
+            then the motor is 'detached' and will glide to a stop.
+            if pin_forward and pin_backward are both at duty_cycle == 1,
+            then the motor will be forcibly stopped (can be used for braking)
+        max_duty is from 0 to 1 (fully off to fully on). I've read 0.9 is a good max.
+        """
         self.pin_forward = pin_forward
         self.pin_backward = pin_backward
+        self.zero_throttle = zero_throttle
+        self.max_duty = max_duty
 
-        GPIO.setmode(GPIO.BOARD)
-        GPIO.setup(self.pin_forward, GPIO.OUT)
-        GPIO.setup(self.pin_backward, GPIO.OUT)
+        self.throttle=0
+        self.speed=0
         
-        self.pwm = GPIO.PWM(freq)
-        self.pwm.start(0)
+        self.pin_forward.start(0)
+        self.pin_backward.start(0)
 
-    def run(self, speed):
-        import RPi.GPIO as GPIO
-        '''
-        Update the speed of the motor where 1 is full forward and
-        -1 is full backwards.
-        '''
-        if speed > 1 or speed < -1:
-            raise ValueError( "Speed must be between 1(forward) and -1(reverse)")
+    def run(self, throttle:float) -> None:
+        """
+        Update the speed of the motor
+        :param throttle:float throttle value in range -1 to 1,
+                        where 1 is full forward and -1 is full backwards.
+        """
+        if throttle is None:
+            logger.warn("TwoWheelSteeringThrottle throttle is None")
+            return
+        if throttle > 1 or throttle < -1:
+            logger.warn( f"TwoWheelSteeringThrottle throttle is {throttle}, but it must be between 1(forward) and -1(reverse)")
+            throttle = clamp(throttle, -1, 1)
+
+        self.speed = throttle
+        self.throttle = dk.utils.map_range_float(throttle, -1, 1, -self.max_duty, self.max_duty)
         
-        self.speed = speed
-        max_duty = 90 #I've read 90 is a good max
-        self.throttle = int(dk.utils.map_range(speed, -1, 1, -max_duty, max_duty))
-        
-        if self.throttle > 0:
-            self.pwm.ChangeDutyCycle(self.throttle)
-            GPIO.output(self.pin_forward, GPIO.HIGH)
-            GPIO.output(self.pin_backward, GPIO.LOW)
-        elif self.throttle < 0:
-            self.pwm.ChangeDutyCycle(-self.throttle)
-            GPIO.output(self.pin_forward, GPIO.LOW)
-            GPIO.output(self.pin_backward, GPIO.HIGH)
+        if self.throttle > self.zero_throttle:
+            self.pin_backward.duty_cycle(0)
+            self.pin_forward.duty_cycle(self.throttle)
+        elif self.throttle < -self.zero_throttle:
+            self.pin_forward.duty_cycle(0)
+            self.pin_backward.duty_cycle(-self.throttle)
         else:
-            self.pwm.ChangeDutyCycle(self.throttle)
-            GPIO.output(self.pin_forward, GPIO.LOW)
-            GPIO.output(self.pin_backward, GPIO.LOW)
-
+            self.pin_forward.duty_cycle(0)
+            self.pin_backward.duty_cycle(0)
 
     def shutdown(self):
-        import RPi.GPIO as GPIO
-        self.pwm.stop()
-        GPIO.cleanup()
+        self.pin_forward.stop()
+        self.pin_backward.stop()
 
 
 class TwoWheelSteeringThrottle(object):
