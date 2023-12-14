@@ -106,7 +106,7 @@ THROTTLE_REVERSE_PWM = 220      #pwm value for max reverse throttle
 PIGPIO_PWM = {
     "FWD_DUTY_PIN": "PIGPIO.BCM.13",  # provides forward duty cycle to motor
     "BWD_DUTY_PIN": "PIGPIO.BCM.19",  # provides reverse duty cycle to motor
-    "PWM_STEERING_PIN": "PIGPIO.BCM.24",       # provides servo pulse to steering servo
+    "PWM_STEERING_PIN": "PIGPIO.BCM.14",       # provides servo pulse to steering servo
     "PWM_STEERING_SCALE": 1.0,        # used to compensate for PWM frequency differents from 60hz; NOT for adjusting steering range
     "PWM_STEERING_INVERTED": False,   # True if hardware requires an inverted PWM pulse
     "STEERING_LEFT_PWM": 2172,         # pwm value for full left steering (use `donkey calibrate` to measure value for your car)
