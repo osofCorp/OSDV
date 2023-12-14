@@ -611,7 +611,7 @@ class L298N_HBridge_2pin(object):
     '''
     Motor controlled with an L298N hbridge from the gpio pins on Rpi
     '''
-    def __init__(self, pin_forward, pin_backward, pwm_pin, freq = 50):
+    def __init__(self, pin_forward, pin_backward, freq = 50):
         import RPi.GPIO as GPIO
         self.pin_forward = pin_forward
         self.pin_backward = pin_backward
