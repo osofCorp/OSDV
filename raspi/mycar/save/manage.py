@@ -55,23 +55,6 @@ class PWMSteering_TATAMI:
         pass
         
     def run_threaded(self, angle):
-        
-        #Steering Feeling Adjustment
-        ang_abs=np.abs(angle)
-        steering_half=0.5
-        if ang_abs < steering_half:
-            slope = self.steering_feel/steering_half
-            angle = np.sign(angle)*ang_abs*slope
-        else:
-            slope = (1.0-self.steering_feel)/(1.0-steering_half)
-            angle = np.sign(angle)* (self.steering_feel+(ang_abs-steering_half)*slope)
-            
-        #Steering Balance Adjustment
-        if angle>0:
-            angle =  angle * (1.0+self.steering_balance)
-        else:
-            angle =  angle * (1.0-self.steering_balance)
-                
         #Steering PWM Calculation
         servo_p = int( self.center - self.half_range*angle  )
         if servo_p > self.left_pulse:
