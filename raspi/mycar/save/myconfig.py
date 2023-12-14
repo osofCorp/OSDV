@@ -32,3 +32,16 @@ USE_SSD1306_128_32 = False  # Enable the SSD_1306 OLED Display
 
 CAMERA_VFLIP = True
 CAMERA_HFLIP = True
+STEERING_LEFT_PWM = 460.0
+STEERING_RIGHT_PWM = 290.0
+
+#TatamiRacer Tunable Parameter (TATAMI_*)
+TATAMI_STEERING_LEFT_PWM = 2172 #PWM value for full left steering (Center PWM + steering level)
+TATAMI_STEERING_RIGHT_PWM = 916 #PWM value for full right steering
+TATAMI_STEERING_FEEL = 0.3 #Steering Feeling Adjustment (Angle Level at Steering 50%)  
+TATAMI_STEERING_BALANCE = -0.1 #Steering L/R Balance -1.0(L)..+1.0(R)
+TATAMI_THROTTLE_START_BOOST_TIME = 0.9 #Throttle boost time[sec]
+TATAMI_THROTTLE_START_BOOST = 1.0 #Throttle boost level for start torque up(0..1)
+TATAMI_THROTTLE_UPPER_LIMIT = 1.0 #Throttle upper limit (0..1)
+TATAMI_THROTTLE_LOWER_LIMIT = 0.8 #Throttle lower limit (0..1)
+TATAMI_THROTTLE_STEERING_BOOST = 1.0 #Throttle boost adjustment by steering angle (0..1)

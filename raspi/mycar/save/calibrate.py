@@ -25,6 +25,24 @@ from donkeycar.utils import *
 
 from socket import gethostname
 
+
+
+from docopt import docopt
+
+import numpy as np
+import pigpio
+import time
+
+#
+# import cv2 early to avoid issue with importing after tensorflow
+# see https://github.com/opencv/opencv/issues/14884#issuecomment-599852128
+#
+try:
+    import cv2
+except:
+    pass
+
+
 def drive(cfg ):
     '''
     Construct a working robotic vehicle from many parts.
@@ -116,18 +134,8 @@ def drive(cfg ):
         # This driver will be removed in a future release
         #
         from donkeycar.parts.actuator import PWMSteering, PWMThrottle, PiGPIO_PWM
-        steering_controller = PiGPIO_PWM(cfg.STEERING_PWM_PIN, freq=cfg.STEERING_PWM_FREQ,
-                                         inverted=cfg.STEERING_PWM_INVERTED)
-        steering = PWMSteering(controller=steering_controller,
-                               left_pulse=cfg.STEERING_LEFT_PWM,
-                               right_pulse=cfg.STEERING_RIGHT_PWM)
-
-        throttle_controller = PiGPIO_PWM(cfg.THROTTLE_PWM_PIN, freq=cfg.THROTTLE_PWM_FREQ,
-                                         inverted=cfg.THROTTLE_PWM_INVERTED)
-        throttle = PWMThrottle(controller=throttle_controller,
-                               max_pulse=cfg.THROTTLE_FORWARD_PWM,
-                               zero_pulse=cfg.THROTTLE_STOPPED_PWM,
-                               min_pulse=cfg.THROTTLE_REVERSE_PWM)
+        steering = PWMSteering_TATAMI(cfg)
+        throttle = PWMThrottle_TATAMI(cfg)
         
         drive_train = dict()
         drive_train['steering'] = steering
