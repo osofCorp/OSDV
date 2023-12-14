@@ -1004,7 +1004,7 @@ def add_drivetrain(V, cfg):
                 pins.pwm_pin_by_id(dt['BWD_DUTY_PIN']))
 
             V.add(steering, inputs=['angle'], threaded=True)
-            V.add(motor, inputs=["throttle"])
+            V.add(motor, inputs=["throttle"], threaded=True)
 
             drive_train = dict()
             drive_train['steering'] = steering
