@@ -144,6 +144,13 @@ PIGPIO_PWM = {
 #   although it is discouraged to mix RPI_GPIO and PIGPIO.
 #
 SERVO_HBRIDGE_2PIN = {
+    "FWD_DUTY_PIN": "RPI_GPIO.BOARD.18",  # provides forward duty cycle to motor
+    "BWD_DUTY_PIN": "RPI_GPIO.BOARD.16",  # provides reverse duty cycle to motor
+    "PWM_STEERING_PIN": "RPI_GPIO.BOARD.33",       # provides servo pulse to steering servo
+    "PWM_STEERING_SCALE": 1.0,        # used to compensate for PWM frequency differents from 60hz; NOT for adjusting steering range
+    "PWM_STEERING_INVERTED": False,   # True if hardware requires an inverted PWM pulse
+    "STEERING_LEFT_PWM": 460,         # pwm value for full left steering (use `donkey calibrate` to measure value for your car)
+    "STEERING_RIGHT_PWM": 290,        # pwm value for full right steering (use `donkey calibrate` to measure value for your car)
       # pwm value for full right steering (use `donkey calibrate` to measure value for your car)
 }
 
