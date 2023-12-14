@@ -29,109 +29,6 @@ try:
 except:
     pass
 
-#Steering parts for TatamiRacer
-class PWMSteering_TATAMI:
-    def __init__(self,cfg):
-
-        self.gpio_pin = 14 #Servo PWM pin
-        self.pi = pigpio.pi()
-        self.pigpio = pigpio
-        
-        #tatamiRacer Steering Control Tunable Parameter
-        self.left_pulse = cfg.TATAMI_STEERING_LEFT_PWM #LEFT PWM
-        self.right_pulse = cfg.TATAMI_STEERING_RIGHT_PWM #RIGHT PWM
-
-        self.half_range = abs(self.right_pulse - self.left_pulse)/2
-        self.center = min(self.left_pulse,self.right_pulse) + self.half_range
-
-        self.servo_idle_time0 = time.time()
-        self.servo_p0 = 0
-
-        print('PWM Steering for TatamiRacer Created.')
-
-    def update(self):
-        pass
-        
-    def run_threaded(self, angle):
-        #Steering PWM Calculation
-        servo_p = int( self.center - self.half_range*angle  )
-        if servo_p > self.left_pulse:
-            servo_p = self.left_pulse
-        elif servo_p < self.right_pulse:
-            servo_p = self.right_pulse
-        
-        if self.servo_p0 != servo_p: #PWM not changed
-            self.servo_idle_time0=time.time() #Count idle time
-            servo_idle_time = 0
-        else:
-            servo_idle_time=time.time()-self.servo_idle_time0
-        self.servo_p0 = servo_p
-        
-        if servo_idle_time <= 5.0:
-            self.pi.set_servo_pulsewidth(self.gpio_pin, servo_p)
-        else: #Servo power off
-            self.pi.set_servo_pulsewidth(self.gpio_pin, 0)
-            
-    def run(self, angle):
-        pass
-
-    def shutdown(self):
-        pi.set_mode(self.gpio_pin, self.pigpio.INPUT)
-        self.pi.stop()      
-
-#Throttle parts for TatamiRacer
-class PWMThrottle_TATAMI:
-    def __init__(self,cfg):
-        self.gpio_pin0 = 13 #Motor PWM1 pin
-        self.gpio_pin1 = 19 #Motor PWM2 pin
-        self.pigpio = pigpio
-        self.pi = pigpio.pi()
-
-        #TatamiRacer Throttle Control Tunable Parameter
-        self.throttle_upper_limit = cfg.TATAMI_THROTTLE_UPPER_LIMIT
-        self.throttle_lower_limit = cfg.TATAMI_THROTTLE_LOWER_LIMIT
-        
-        self.throttle_deadzone = 0.01 #Throttle deadzone for detect zero (0..1)
-        self.pwm_max = 100 #PWM Max
-        self.pi.set_PWM_range(self.gpio_pin0,100)  # Set PWM range
-        self.pi.set_PWM_frequency(self.gpio_pin0,490)
-        self.pi.set_PWM_range(self.gpio_pin1,100)  # Set PWM range
-        self.pi.set_PWM_frequency(self.gpio_pin1,490)
-        
-        self.throttle_start_boost_time0 = time.time()
-        print('PWM Throttle for TatamiRacer created.')
-
-    def update(self):
-        pass
-
-    def run_threaded(self, throttle,angle):
-                    
-        throttle_abs = np.abs(throttle)
-        if throttle_abs<=self.throttle_deadzone:
-            self.throttle_start_boost_time0 = time.time()
-            throttle = 0.0
-
-        #Set Motor PWM 
-        motor_v = int(self.pwm_max*throttle)
-        if np.abs(motor_v) > self.pwm_max:
-            motor_v = int(np.sign(motor_v)*self.pwm_max)
-        if throttle > 0:
-            self.pi.set_PWM_dutycycle(self.gpio_pin0,motor_v) # Set PWM duty
-            self.pi.set_PWM_dutycycle(self.gpio_pin1,0) # PWM off
-        else:
-            self.pi.set_PWM_dutycycle(self.gpio_pin1,-motor_v) # Set PWM duty
-            self.pi.set_PWM_dutycycle(self.gpio_pin0,0) # PWM off
-        
-    def run(self, throttle):
-        pass
-
-    def shutdown(self):
-        self.pi.set_PWM_dutycycle(self.gpio_pin0,0) # PWM off
-        self.pi.set_PWM_dutycycle(self.gpio_pin1,0) # PWM off
-        self.pi.stop()            
-
-
-
 import donkeycar as dk
 from donkeycar.parts.transform import TriggeredCallback, DelayedTrigger
 from donkeycar.parts.tub_v2 import TubWriter
@@ -1091,15 +988,22 @@ def add_drivetrain(V, cfg):
             V.add(RoboHATDriver(cfg), inputs=['angle', 'throttle'])
 
         elif cfg.DRIVE_TRAIN_TYPE == "PIGPIO_PWM": # PIGPIO Drive for TatamiRacer 
-            from donkeycar.parts.actuator import PWMSteering, PWMThrottle
-            steering = PWMSteering_TATAMI(cfg)
-            throttle = PWMThrottle_TATAMI(cfg)
-            V.add(steering, inputs=['angle'], threaded=True)
-            V.add(throttle, inputs=['throttle','angle'], threaded=True)
+            dt = cfg.PIGPIO_PWM
+            from donkeycar.parts.actuator import PulseController, PWMSteering
+            steering_controller = PulseController(
+                pwm_pin=pins.pwm_pin_by_id(dt['PWM_STEERING_PIN']),
+                pwm_scale=dt['PWM_STEERING_SCALE'],
+                pwm_inverted=dt['PWM_STEERING_INVERTED'])
+            steering = PWMSteering(controller=steering_controller,
+                                            left_pulse=dt['STEERING_LEFT_PWM'],
+                                            right_pulse=dt['STEERING_RIGHT_PWM'])
 
-            drive_train = dict()
-            drive_train['steering'] = steering
-            drive_train['throttle'] = throttle
+            motor = actuator.L298N_HBridge_2pin(
+                pins.pwm_pin_by_id(dt['FWD_DUTY_PIN']),
+                pins.pwm_pin_by_id(dt['BWD_DUTY_PIN']))
+
+            V.add(steering, inputs=['angle'], threaded=True)
+            V.add(motor, inputs=["throttle"])
     
         elif cfg.DRIVE_TRAIN_TYPE == "VESC":
             from donkeycar.parts.actuator import VESC
