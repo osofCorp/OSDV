@@ -111,31 +111,26 @@ def drive(cfg ):
         V.add(throttle, inputs=['throttle'], threaded=True)
 
     elif cfg.DRIVE_TRAIN_TYPE == "PIGPIO_PWM":
-        #
-        # This driver is DEPRECATED in favor of 'DRIVE_TRAIN_TYPE == "PWM_STEERING_THROTTLE"'
-        # This driver will be removed in a future release
-        #
-        from donkeycar.parts.actuator import PWMSteering, PWMThrottle, PiGPIO_PWM
-        steering_controller = PiGPIO_PWM(cfg.STEERING_PWM_PIN, freq=cfg.STEERING_PWM_FREQ,
-                                         inverted=cfg.STEERING_PWM_INVERTED)
-        steering = PWMSteering(controller=steering_controller,
-                               left_pulse=cfg.STEERING_LEFT_PWM,
-                               right_pulse=cfg.STEERING_RIGHT_PWM)
+            #
+            # Servo for steering and HBridge motor driver in 2pin mode for motor
+            #
+            from donkeycar.parts.actuator import PWMSteering, PWMThrottle, PulseController
 
-        throttle_controller = PiGPIO_PWM(cfg.THROTTLE_PWM_PIN, freq=cfg.THROTTLE_PWM_FREQ,
-                                         inverted=cfg.THROTTLE_PWM_INVERTED)
-        throttle = PWMThrottle(controller=throttle_controller,
-                               max_pulse=cfg.THROTTLE_FORWARD_PWM,
-                               zero_pulse=cfg.THROTTLE_STOPPED_PWM,
-                               min_pulse=cfg.THROTTLE_REVERSE_PWM)
-        
-        drive_train = dict()
-        drive_train['steering'] = steering
-        drive_train['throttle'] = throttle
-        
-        V.add(steering, inputs=['angle'], threaded=True)
-        V.add(throttle, inputs=['throttle'], threaded=True)
+            dt = cfg.PIGPIO_PWM
+            steering_controller = PulseController(
+                pwm_pin=pins.pwm_pin_by_id(dt['PWM_STEERING_PIN']),
+                pwm_scale=dt['PWM_STEERING_SCALE'],
+                pwm_inverted=dt['PWM_STEERING_INVERTED'])
+            steering = PWMSteering(controller=steering_controller,
+                                            left_pulse=dt['STEERING_LEFT_PWM'],
+                                            right_pulse=dt['STEERING_RIGHT_PWM'])
 
+            motor = actuator.L298N_HBridge_2pin(
+                pins.pwm_pin_by_id(dt['FWD_DUTY_PIN']),
+                pins.pwm_pin_by_id(dt['BWD_DUTY_PIN']))
+
+            V.add(steering, inputs=['angle'], threaded=True)
+            V.add(motor, inputs=["throttle"])
 
     elif cfg.DRIVE_TRAIN_TYPE == "MM1":
         from donkeycar.parts.robohat import RoboHATDriver
