@@ -608,18 +608,7 @@ class MockController(object):
 
 
 class L298N_HBridge_2pin(object):
-    """
-    Motor controlled with an 'mini' L298N hbridge using 2 PwmPins,
-    one for forward pwm and for reverse pwm.
-    Chosen with configuration DRIVETRAIN_TYPE=DC_TWO_WHEEL
-    See pins.py for pin provider implementations.
 
-    See https://www.instructables.com/Tutorial-for-Dual-Channel-DC-Motor-Driver-Board-PW/
-    for how an L298N mini-hbridge modules is wired.
-    This driver can also be used for an L9110S/HG7881 motor driver.  See
-    https://electropeak.com/learn/interfacing-l9110s-dual-channel-h-bridge-motor-driver-module-with-arduino/
-    for how an L9110S motor driver module is wired.
-    """
 
     def __init__(self, pin_forward:PwmPin, pin_backward:PwmPin, zero_throttle:float=0, max_duty = 0.9):
         """
