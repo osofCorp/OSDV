@@ -1004,12 +1004,9 @@ def add_drivetrain(V, cfg):
                 pins.pwm_pin_by_id(dt['BWD_DUTY_PIN']))
 
             V.add(steering, inputs=['angle'], threaded=True)
-            V.add(motor, inputs=["throttle"], threaded=True)
+            V.add(motor, inputs=["throttle"])
 
-            drive_train = dict()
-            drive_train['steering'] = steering
-            drive_train['throttle'] = throttle
-    
+            
         elif cfg.DRIVE_TRAIN_TYPE == "VESC":
             from donkeycar.parts.actuator import VESC
             logger.info("Creating VESC at port {}".format(cfg.VESC_SERIAL_PORT))
