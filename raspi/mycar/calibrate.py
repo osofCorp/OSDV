@@ -130,7 +130,7 @@ def drive(cfg ):
                 pins.pwm_pin_by_id(dt['BWD_DUTY_PIN']))
 
             V.add(steering, inputs=['angle'], threaded=True)
-            V.add(motor, inputs=["throttle"])
+            V.add(motor, inputs=["throttle"], threaded=True)
 
     elif cfg.DRIVE_TRAIN_TYPE == "MM1":
         from donkeycar.parts.robohat import RoboHATDriver
